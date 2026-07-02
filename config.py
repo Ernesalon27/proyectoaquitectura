@@ -49,4 +49,4 @@ WIFI_PASSWORD = "CONTRASEÑA_DE_TU_RED"
 UBIDOTS_TOKEN = "BBUS-Cf2TbDrAyH0DF7wkCg6hJcyOBtsus6"
 # Label del device creado en Ubidots (ej: "pico-riego")
 UBIDOTS_DEVICE_LABEL = "pico-riego"
-UBIDOTS_URL = "https://industrial.api.ubidots.com/api/v1.6/devices/{}".format(UBIDOTS_DEVICE_LABEL)
+UBIDOTS_URL = "https://stem.ubidots.com/api/v1.6/devices/{}".format(UBIDOTS_DEVICE_LABEL)

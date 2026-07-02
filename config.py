@@ -34,3 +34,19 @@ ANTIRREBOTE_BOTON = 50        # Anti-rebote al detectar el botón presionado
 PAUSA_POST_BOTON = 300        # Pausa tras activar el botón (evita múltiples disparos)
 DESCANSO_RELE = 200           # Pausa eléctrica tras apagar el relé
 PAUSA_CICLO = 20              # Pausa mínima del bucle principal
+INTERVALO_UBIDOTS = 10000     # Cada cuánto se envían datos a Ubidots
+
+# ==========================================
+# WIFI
+# ==========================================
+WIFI_SSID = "NOMBRE_DE_TU_RED"
+WIFI_PASSWORD = "CONTRASEÑA_DE_TU_RED"
+
+# ==========================================
+# UBIDOTS
+# ==========================================
+# Token de tu cuenta Ubidots (Perfil -> API Credentials)
+UBIDOTS_TOKEN = "BBUS-Cf2TbDrAyH0DF7wkCg6hJcyOBtsus6"
+# Label del device creado en Ubidots (ej: "pico-riego")
+UBIDOTS_DEVICE_LABEL = "pico-riego"
+UBIDOTS_URL = "https://industrial.api.ubidots.com/api/v1.6/devices/{}".format(UBIDOTS_DEVICE_LABEL)

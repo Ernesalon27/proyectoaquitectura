@@ -10,14 +10,17 @@ Estructura del proyecto
 ```
 proyecto_riego/
 ├── main.py          Punto de entrada, orquesta el bucle principal
-├── config.py         Pines, calibración y tiempos
+├── config.py         Pines, calibración, tiempos, WiFi y Ubidots
 ├── sensores.py        Lectura y cálculo del % de humedad
 ├── bomba.py           Control del relé / bomba de agua
 ├── boton.py            Lectura del botón con anti-rebote
+├── wifi.py              Conexión WiFi del Pico W
+├── ubidots.py            Envío de datos a Ubidots
 └── diagram.json         Diagrama de simulación para Wokwi
 ```
 
 Descripción de cada módulo
+
 `config.py`
 Centraliza toda la configuración del proyecto: número de pines usados,
 valores de calibración de los sensores (`VALOR_SECO` y `VALOR_HUMEDO`) y los
@@ -45,6 +48,16 @@ Lee el botón (con pull-up interno, así que presionado = `0`) aplicando
 anti-rebote por software. `boton_presionado()` devuelve `True` solo si la
 pulsación fue confirmada tras el retardo de anti-rebote.
 
+`wifi.py`
+Conecta el Pico W a la red WiFi definida en `config.py`. Expone
+`conectar_wifi()`, que intenta conectarse con un timeout y devuelve `True`/
+`False` según el resultado. Es necesario antes de poder hablar con Ubidots.
+
+`ubidots.py`
+Envía la humedad y el estado de la bomba a Ubidots mediante HTTP POST
+(librería `urequests`). Si falla el envío (por ejemplo, se cayó el WiFi),
+solo imprime el error y el programa sigue funcionando con normalidad.
+
 `main.py`
 Importa los demás módulos y ejecuta el bucle principal:
 1. Cada `INTERVALO_LECTURA` ms imprime el porcentaje de humedad.
@@ -68,7 +81,7 @@ Materiales
 - Protoboard
 - Fuente de alimentación externa para la bomba (según su consumo)
 
- Conexiones
+Conexiones
 
 | Componente          | Pin del sensor/módulo | Pin en el Pico W |
 |----------------------|------------------------|-------------------|
@@ -111,3 +124,46 @@ Si solo se quiere probar la lógica sin armar el circuito, se puede cargar
 [Wokwi](https://wokwi.com/projects/new/micropython-pi-pico-w), reemplazando
 los sensores reales por los potenciómetros del diagrama para simular
 distintos niveles de humedad.
+
+ Integración con Ubidots
+ 1. Configurar credenciales
+En `config.py`, completar:
+- `WIFI_SSID` y `WIFI_PASSWORD`: datos de tu red WiFi.
+- `UBIDOTS_TOKEN`: tu token de cuenta (Ubidots → Perfil → **API Credentials**).
+- `UBIDOTS_DEVICE_LABEL`: el label del device creado en Ubidots (tipo
+  **Blank Device**).
+
+
+ 2. Instalar `urequests` en la Pico W
+`urequests` no viene incluido en MicroPython por defecto. Con el Pico W ya
+conectado a WiFi, desde el REPL (en Thonny) ejecutar una sola vez:
+
+```python
+import mip
+mip.install("urequests")
+```
+
+Esto instala la librería en el propio dispositivo (queda guardada ahí, no
+hace falta repetirlo en cada ejecución).
+
+3. Crear el device en Ubidots
+1. Entrar al dashboard de Ubidots → **Devices** → **+ Create Device**.
+2. Elegir **Blank Device** (dispositivo genérico que recibe datos por la
+   Data API).
+3. Ponerle un nombre y un label (ej. `pico-riego`) — ese label debe
+   coincidir con `UBIDOTS_DEVICE_LABEL` en `config.py`.
+4. Las variables `humedad` y `bomba` se crean automáticamente la primera
+   vez que el Pico W envía datos; no hace falta crearlas a mano.
+
+4. Verificar el envío
+Con todo cargado en el Pico W, en el shell/monitor serie deberías ver
+mensajes como:
+
+>> WiFi conectado. IP: 192.168.1.xx
+>> Datos enviados a Ubidots: {'humedad': 42, 'bomba': 0} - status: 200
+```
+
+Y en el dashboard de Ubidots, dentro del device, las variables `humedad` y
+`bomba` empezarán a mostrar los valores en tiempo real. Desde ahí puedes
+armar un Dashboard con gráficos/indicadores para visualizarlos.
+

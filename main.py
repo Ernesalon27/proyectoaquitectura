@@ -11,17 +11,23 @@ Flujo:
 """
 
 import utime
-from config import INTERVALO_LECTURA, PAUSA_CICLO
+from config import INTERVALO_LECTURA, INTERVALO_UBIDOTS, PAUSA_CICLO
 from sensores import obtener_porcentaje_humedad
 from bomba import encender_bomba, actualizar_bomba, bomba_esta_activa
 from boton import boton_presionado
+from wifi import conectar_wifi
+from ubidots import enviar_datos
 
 # Espera de estabilidad inicial al encender la placa
 utime.sleep_ms(500)
 print("--- Sistema Iniciado Correctamente ---")
 
-# Restamos INTERVALO_LECTURA para que la primera lectura se imprima de inmediato
+# Conexión a WiFi (necesaria para enviar datos a Ubidots)
+wifi_conectado = conectar_wifi()
+
+# Restamos los intervalos para que la primera lectura/envío se haga de inmediato
 ultimo_envio_shell = utime.ticks_ms() - INTERVALO_LECTURA
+ultimo_envio_ubidots = utime.ticks_ms() - INTERVALO_UBIDOTS
 
 while True:
     tiempo_actual = utime.ticks_ms()
@@ -38,6 +44,12 @@ while True:
 
     # 3. Control de tiempo de la bomba (apagado automático)
     actualizar_bomba(tiempo_actual)
+
+    # 4. Envío periódico de datos a Ubidots
+    if wifi_conectado and utime.ticks_diff(tiempo_actual, ultimo_envio_ubidots) >= INTERVALO_UBIDOTS:
+        humedad_actual = obtener_porcentaje_humedad()
+        enviar_datos(humedad_actual, bomba_esta_activa())
+        ultimo_envio_ubidots = tiempo_actual
 
     # Pausa mínima de control
     utime.sleep_ms(PAUSA_CICLO)
